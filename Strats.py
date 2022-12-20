@@ -36,26 +36,28 @@ def perturb(weights, rate):
             weights[i] = w
 
 
-def evolve(strategies):
-    len_strat = len(strategies)
-    parents = strategies[:len_strat // 6]
-    new_strat = list(parents)
+def evolve(strats):
+    len_strat = len(strats)
+    parents = strats[:len_strat // 6]
+    for parent in parents:
+        parent.vp = 0
+    new_strats = list(parents)
     for parent in parents:
         w = list(parent.weights)
         perturb(w, 0.02)
-        new_strat.append(parent.__class__(w))
+        new_strats.append(parent.__class__(w))
     for parent in parents:
         w = list(parent.weights)
         mutate(w, 0.05)
-        new_strat.append(parent.__class__(w))
-    while len(new_strat) < len_strat:
+        new_strats.append(parent.__class__(w))
+    while len(new_strats) < len_strat:
         p1 = random.choice(parents)
         p2 = random.choice(parents)
-        assert p1.__class__ == p2.__class__
+        # assert p1.__class__ == p2.__class__
         w = cross(p1.weights, p2.weights)
         mutate(w, 0.05)
-        new_strat.append(p1.__class__(w))
-    return new_strat
+        new_strats.append(p1.__class__(w))
+    return new_strats
 
 
 class SimpleGA(Strategy):
@@ -68,11 +70,17 @@ class SimpleGA(Strategy):
             self.weights = weights
         else:
             self.weights = []
-            for _ in range(len(self.idx)):
+            for _ in range(len(self.buyable)):
                 self.weights.append(random.random())
 
-        def buy_key(x):
-            return self.weights[self.idx[x]]
+        def get_weight(c):
+            return self.weights[self.idx[c]]
 
-        self.prio_buys = sorted(self.buyable, key=buy_key)
+        self.prio_buys = sorted(self.buyable, key=get_weight)
         self.vp = 0
+
+        self.prio_actions = [Lab, Village, Smithy]
+
+
+def get_vp(strategy):
+    return strategy.vp
