@@ -11,7 +11,7 @@ class Player:
         self.discardP = []
         self.actions = 1
 
-    def setup(self):
+    def reset(self):
         self.deck = [Copper] * 7 + [Estate] * 3
         random.shuffle(self.deck)
         self.hand = []
@@ -70,10 +70,10 @@ class Player:
             coins += card.coins
         return coins
 
-    def buy_acc_strat(self, strategy):  # buy according to strat
+    def buy_acc_strat(self, strategy, turn):  # buy according to strat
         self.play_actions()
         coins = self.calc_coins()
-        for card in strategy.prio_buys:
+        for card in strategy.prio_buys[turn]:
             if coins >= card.cost:
                 self.buy_card(card)
                 break
@@ -87,8 +87,3 @@ class Player:
         for i in range(len(self.discardP)):
             vp += self.discardP[i].vp
         return vp
-
-    def play_game(self, max_rounds):
-        for _ in range(max_rounds):
-            self.draw_new_hand()
-            self.buy_acc_strat(self.strategy)

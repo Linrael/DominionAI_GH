@@ -1,3 +1,7 @@
+# Cards and some general input about the game
+max_rounds = 20
+
+
 class Card:
     def __init__(self, name, cost, coins=0, vp=0, is_action=False):
         self.name = name
@@ -36,5 +40,4 @@ Province = Card('Province', 8, vp=6)
 
 NoCard = Card('NoCard', 0)
 
-All_Cards = [Province, Gold, Lab, Duchy, Smithy, Silver, Village, Estate, Copper]
-
+All_Cards = [Province, Duchy, Estate, Gold, Silver, Copper, Lab, Smithy, Village]
