@@ -1,4 +1,5 @@
 import random
+import numpy as np
 from collections import defaultdict
 from Cards import *
 
@@ -153,9 +154,6 @@ def current_state(player, turn):
 class MCRL:  # Monte Carlo Reinforcement Learning
     def __init__(self, q=None, c=None):
         self.buyable = All_Cards + [NoCard]
-        self.idx = {}
-        for card in self.buyable:
-            self.idx[card] = len(self.idx)
 
         self.q = defaultdict(lambda: [0.5] * len(self.buyable))
         if q: self.q.update(q)
@@ -167,9 +165,8 @@ class MCRL:  # Monte Carlo Reinforcement Learning
 
         self.prio_buys = []
         self.prio_actions = [Lab, Village, Smithy]
-        self.buy_at_turn = {}
-        for i in range(max_rounds):
-            self.buy_at_turn[i] = [0] * len(self.buyable)
+
+        self.buy_at_turn = np.zeros((max_rounds, len(self.buyable)), dtype=int)
 
     def start_game(self):
         self.last_s = None
@@ -179,7 +176,8 @@ class MCRL:  # Monte Carlo Reinforcement Learning
         self.sa_hist.append((self.last_s, self.buyable.index(card)))
 
     def count_buys(self, card, turn):
-        self.buy_at_turn[turn][self.buyable.index(card)] += 1
+        self.buy_at_turn[turn, self.buyable.index(card)] += 1
+        # print('!', end='')
 
     def set_buy_prio(self, player, turn):
         self.last_s = current_state(player, turn)
@@ -200,70 +198,10 @@ class MCRL:  # Monte Carlo Reinforcement Learning
         # Important since we initialize new states with same q values
         self.prio_buys = [card for card, k in sorted(zip(self.buyable, keys), key=lambda x: x[1], reverse=True)]
 
-    def game_ended(self, reward):
+    def game_ended(self, g):
         # if self.last_s is None:
         #     assert False, "Games shouldn't end with no moves taken"
-        g = reward  # self.vp?
         rev_hist = self.sa_hist[::-1]
         for s, a in rev_hist:
             self.c[s][a] += 1
             self.q[s][a] += (1 / self.c[s][a])*(g - self.q[s][a])
-
-
-
-
-
-# class MCRL:  # Monte Carlo Reinforcement Learning
-#     def __init__(self, q={}, c={}):
-#         self.buyable = All_Cards + [NoCard]
-#         self.idx = {}
-#         for card in self.buyable:
-#             self.idx[card] = len(self.idx)
-#
-#         self.q = defaultdict(ConstArray(0.5, len(self.buyable)))  # tbc
-#         self.q.update(q)
-#         self.c = defaultdict(ConstArray(0, len(self.buyable)))
-#         self.c.update(c)
-#         self.sa_hist = []
-#         self.last_s = None
-#         self.learn = True
-#
-#         self.vp = 0
-#         #
-#         self.prio_buys = []
-#         self.prio_actions = [Lab, Village, Smithy]
-#         self.buy_at_turn = {}
-#         for i in range(max_rounds):
-#             self.buy_at_turn[i] = [0] * len(self.buyable)
-#
-#     def start_game(self):
-#         self.last_s = None
-#         # self.last_a = None
-#         self.sa_hist.clear()
-#
-#     def buy_accepted(self, card, turn):
-#         self.sa_hist.append((self.last_s, self.buyable.index(card)))
-#         self.buy_at_turn[turn][self.buyable.index(card)] += 1
-#
-#     def set_buy_prio(self, player, turn):
-#         self.last_s = current_state(player, turn)
-#         q = self.q[self.last_s]  # array with values for each card in buyable
-#         if random.random() < 0.9:
-#             self.prio_buys = [c for c, k in sorted(zip(self.buyable, q), key=lambda x: x[1], reverse=True)]
-#         else:
-#             pb = list(self.buyable)
-#             random.shuffle(pb)
-#             self.prio_buys = pb
-#
-#     def game_ended(self, reward):
-#         if not self.learn:
-#             return
-#         if self.last_s is None:
-#             assert False, "Games shouldn't end with no moves taken"
-#
-#         g = reward  # self.vp?
-#         rev_hist = self.sa_hist[::-1]
-#         for s, a in rev_hist:
-#             self.c[s][a] += 1
-#             self.q[s][a] += (1 / self.c[s][a])*(g - self.q[s][a])
-

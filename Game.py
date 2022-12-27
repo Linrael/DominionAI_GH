@@ -39,15 +39,12 @@ class GATournament:
             self.evolve_strats()
         self.one_epoch()
 
-
-# t1 = GATournament(LinearGA, all_strats=90)
-# t1.run_tournament()
-#
-# for j in range(10):
-#     for i in [0, 1, 2, -3, -2, -1]:
-#         print(t1.all_strategies[j].prio_buys[i])
-#     print(t1.all_strategies[j].vp)
-#     print('\n')
+    def print_buy_history(self, top_strats=10):
+        for j in range(top_strats):
+            for i in [0, 1, 2, -3, -2, -1]:
+                print(self.all_strategies[j].prio_buys[i])
+            print(self.all_strategies[j].vp)
+            print('\n')
 
 
 class MCRLTournament:
@@ -74,6 +71,7 @@ class MCRLTournament:
     def last_epoch(self, gps=15):
         player = self.player
         for _ in range(gps):
+            player.strategy.start_game()
             player.reset()
             for turn in range(max_rounds):
                 player.draw_new_hand()
@@ -86,4 +84,15 @@ class MCRLTournament:
                         player.strategy.buy_accepted(card)
                         player.strategy.count_buys(card, turn)
                         break
-            player.strategy.vp = 0
+
+    def run_tournament(self, epochs=100, gps=100):
+        for _ in tqdm(range(epochs)):
+            self.one_epoch(gps)
+        self.last_epoch(gps)
+
+    def print_buy_history(self):
+        for i in range(max_rounds):
+            print('Turn', i + 1)
+            for j in range(len(self.player.strategy.buyable)):
+                print(self.player.strategy.buyable[j], self.player.strategy.buy_at_turn[i, j], end='   ')
+            print('')

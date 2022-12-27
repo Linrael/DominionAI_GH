@@ -21,17 +21,17 @@ class Player:
 
     def draw(self, n=1):
         length_deck = len(self.deck)
-        if length_deck < n:
-            if length_deck + len(self.discardP) < n:
-                [self.hand.append(self.deck.pop()) for _ in range(length_deck)]
-                [self.hand.append(self.discardP.pop()) for _ in range(len(self.discardP))]
-            else:
+        if length_deck >= n:
+            [self.hand.append(self.deck.pop()) for _ in range(n)]
+        else:
+            if length_deck + len(self.discardP) >= n:
                 [self.hand.append(self.deck.pop()) for _ in range(length_deck)]
                 [self.deck.append(self.discardP.pop()) for _ in range(len(self.discardP))]
                 random.shuffle(self.deck)
                 [self.hand.append(self.deck.pop()) for _ in range(n - length_deck)]
-        else:
-            [self.hand.append(self.deck.pop()) for _ in range(n)]
+            else:
+                [self.hand.append(self.deck.pop()) for _ in range(length_deck)]
+                [self.hand.append(self.discardP.pop()) for _ in range(len(self.discardP))]
 
     def draw_new_hand(self):
         [self.discardP.append(self.hand.pop()) for _ in range(len(self.hand))]
