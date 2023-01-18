@@ -70,13 +70,47 @@ class Player:
             coins += card.coins
         return coins
 
-    def buy_acc_strat(self, strategy, turn):  # buy according to strat
+    def buy_acc_gastrat(self, strategy, turn):  # buy according to strat
         self.play_actions()
         coins = self.calc_coins()
         for card in strategy.prio_buys[turn]:
             if coins >= card.cost:
                 self.buy_card(card)
                 break
+
+    def custom_buy(self, turn):
+        # if turn > 15:
+        #     prio_buys = [Province, Duchy, Estate, NoCard]
+        # elif turn > 13:
+        #     prio_buys = [Province, Duchy, Silver, NoCard]
+        # elif turn > 10:
+        #     prio_buys = [Province, Gold, Duchy, Silver, NoCard]
+        # else:
+            # val = 0
+            # all_cards = len(self.deck) + len(self.hand) + len(self.discardP)
+            # for card in self.deck:
+            #     val += card.coins
+            # for card in self.hand:
+            #     val += card.coins
+            # for card in self.discardP:
+            #     val += card.coins
+            # avg_val = val / all_cards
+            # if turn > 6:
+            #     if avg_val > 1:
+            #         prio_buys = [Province, Gold, Lab, Smithy, Silver, NoCard]
+            #     else:
+            #         prio_buys = [Gold, Lab, Silver, NoCard]
+            # else:
+            #     prio_buys = [Gold, Lab, Smithy, Silver, NoCard]
+        prio_buys = [Province, Gold, Silver]
+        self.play_actions()
+        coins = self.calc_coins()
+        for card in prio_buys:
+            if coins >= card.cost:
+                self.buy_card(card)
+                self.strategy.count_buys(card, turn)
+                break
+
 
     def calc_vp(self):
         vp = 0

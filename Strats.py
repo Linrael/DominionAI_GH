@@ -18,18 +18,20 @@ from Cards import *
 
 
 def cross(weights1, weights2):
-    epsilon = random.random()
-    new_weights = [w1 if random.random() < epsilon else w2 for w1, w2 in zip(weights1, weights2)]
+    eps = random.random()
+    new_weights = [w1 if random.random() < eps else w2 for w1, w2 in zip(weights1, weights2)]
     return new_weights
 
 
-def mutate(weights, rate, rdm_strat):
+def mutate(weights, eps, rdm_strat):
     for i in range(len(weights)):
-        if random.random() < rate:
+        if random.random() < eps:
             weights[i] = rdm_strat[i]
 
 
 # slightly adjust weights towards other weights; on average this reduces extreme weights towards center
+
+
 def perturb(weights, rate, rdm_strat):
     for i in range(len(weights)):
         weights[i] = weights[i] + rate * (rdm_strat[i] - weights[i])
@@ -43,21 +45,20 @@ def evolve(strats, frac=6):
     new_strats = list(parents)
     for parent in parents:
         w = list(parent.weights)
-        rdm_strat = parent.__class__(w)
-        perturb(w, 0.02, rdm_strat.weights)
+        rdm_strat = parent.__class__()
+        perturb(w, 0.05, rdm_strat.weights)
         new_strats.append(parent.__class__(w))
     for parent in parents:
         w = list(parent.weights)
-        rdm_strat = parent.__class__(w)
-        mutate(w, 0.05, rdm_strat.weights)
+        rdm_strat = parent.__class__()
+        mutate(w, 0.075, rdm_strat.weights)
         new_strats.append(parent.__class__(w))
     while len(new_strats) < len_strat:
         p1 = random.choice(parents)
         p2 = random.choice(parents)
-        # assert p1.__class__ == p2.__class__
         w = cross(p1.weights, p2.weights)
-        rdm_strat = p1.__class__(w)
-        mutate(w, 0.05, rdm_strat.weights)
+        rdm_strat = p1.__class__()
+        mutate(w, 0.1, rdm_strat.weights)
         new_strats.append(p1.__class__(w))
     return new_strats
 
@@ -130,32 +131,70 @@ class LinearGA(SimpleGA):
 # ns = evolve([s1, s2], frac=2)
 # print(ns[1].weights)
 
+def current_state_turn(player, turn):
+    return turn
 
-def current_state(player, turn):
-    t = turn
-    # vc = 0  # victory cards
-    # ac = 0  # action cards
-    # cc = 0  # coin cards excluding Copper
+
+def current_state_vac(player, turn):
+    vc = 0  # victory cards
+    ac = 0  # action cards
+    cc = 0  # coin cards excluding Copper
+    for card in player.deck:
+        if card.vp > 0: vc += 1
+        elif card.is_action: ac += 1
+        elif card.coins > 1: cc += 1
+    for card in player.hand:
+        if card.vp > 0: vc += 1
+        elif card.is_action: ac += 1
+        elif card.coins > 1: cc += 1
+    for card in player.discardP:
+        if card.vp > 0: vc += 1
+        elif card.is_action: ac += 1
+        elif card.coins > 1: cc += 1
+    return turn, vc, ac, cc
+
+
+def current_state_avg_val(player, turn):
+    val = 0
+    all_cards = len(player.deck) + len(player.hand) + len(player.discardP)
+    for card in player.deck:
+        val += card.coins
+    for card in player.hand:
+        val += card.coins
+    for card in player.discardP:
+        val += card.coins
+    avg_val = round(10 * (val / all_cards)) / 10
+    return turn, avg_val
+
+
+def current_state_rem_draws(player, turn):
+    # val = 0
+    # all_cards = len(player.deck) + len(player.hand) + len(player.discardP)
     # for card in player.deck:
-    #     if card.vp > 0: vc += 1
-    #     elif card.is_action: ac += 1
-    #     elif card.coins > 1: cc += 1
+    #     val += card.coins
     # for card in player.hand:
-    #     if card.vp > 0: vc += 1
-    #     elif card.is_action: ac += 1
-    #     elif card.coins > 1: cc += 1
+    #     val += card.coins
     # for card in player.discardP:
-    #     if card.vp > 0: vc += 1
-    #     elif card.is_action: ac += 1
-    #     elif card.coins > 1: cc += 1
-    return t  # , vc, ac, cc
+    #     val += card.coins
+    # avg_val = round(5 * (val / all_cards)) / 5
+
+    len_deck = len(player.deck)
+    drawable_cards_after_next_shuffle = (6 * (19 - turn) - len_deck)  # on average draw around 6 cards per turn
+    deck_after_next_shuffle = (len_deck * 7 / 6 + len(player.hand) + len(player.discardP))  # on avg. buy 1 card per turn
+    if drawable_cards_after_next_shuffle <= 0:
+        return 0#, avg_val
+    elif drawable_cards_after_next_shuffle / deck_after_next_shuffle >= 3.25:
+        return 3.5#, avg_val
+    else:
+        return round(2 * drawable_cards_after_next_shuffle / deck_after_next_shuffle) / 2#, avg_val
 
 
 class MCRL:  # Monte Carlo Reinforcement Learning
     def __init__(self, q=None, c=None):
         self.buyable = All_Cards + [NoCard]
+        self.vp = 0
 
-        self.q = defaultdict(lambda: [0.5] * len(self.buyable))
+        self.q = defaultdict(lambda: [0] * len(self.buyable))
         if q: self.q.update(q)
         self.c = defaultdict(lambda: [0] * len(self.buyable))
         if c: self.c.update(c)
@@ -180,7 +219,7 @@ class MCRL:  # Monte Carlo Reinforcement Learning
         # print('!', end='')
 
     def set_buy_prio(self, player, turn):
-        self.last_s = current_state(player, turn)
+        self.last_s = current_state_rem_draws(player, turn)
         q_val = self.q[self.last_s]  # array with values for each card in buyable
         if 0.1 < random.random():
             keys = [(q, random.random()) for q in q_val]  # If q values are same, choose one randomly.
@@ -192,15 +231,13 @@ class MCRL:  # Monte Carlo Reinforcement Learning
             self.prio_buys = pb
 
     def set_best_buy_prio(self, player, turn):
-        self.last_s = current_state(player, turn)
+        self.last_s = current_state_rem_draws(player, turn)
         q_val = self.q[self.last_s]  # array with values for each card in buyable
         keys = [(q, random.random()) for q in q_val]  # If q values are same, choose one randomly.
         # Important since we initialize new states with same q values
         self.prio_buys = [card for card, k in sorted(zip(self.buyable, keys), key=lambda x: x[1], reverse=True)]
 
-    def game_ended(self, g):
-        # if self.last_s is None:
-        #     assert False, "Games shouldn't end with no moves taken"
+    def learn(self, g):
         rev_hist = self.sa_hist[::-1]
         for s, a in rev_hist:
             self.c[s][a] += 1
