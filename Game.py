@@ -47,6 +47,17 @@ class GATournament:
         self.all_strategies = sorted(self.all_strategies, key=get_vp, reverse=True)
         print('Best strat on avg: ' + str(self.all_strategies[0].vp / gps))
 
+    def vp_one_strat(self, gps):  # games per strategy
+        player = Player(self.all_strategies[0])
+        vp = 0
+        for _ in tqdm(range(gps)):
+            player.reset()
+            for turn in range(max_rounds):
+                player.draw_new_hand()
+                player.buy_acc_gastrat(player.strategy, turn)
+            vp += player.calc_vp()  # add up all vps acquired in all gps
+        print('Best strat on avg: ' + str(vp / gps))
+
     def run_tournament(self, epochs=100, gps=15, gps_last_epoch=250):
         for _ in tqdm(range(int(epochs / 3))):
             self.one_episode(gps)
@@ -111,12 +122,14 @@ class MCRLTournament:
         self.last_episode(gps_last_epoch)
 
     def print_buy_history(self):
+        card_list = np.zeros(10)
         for i in range(max_rounds):
             print('Turn', i + 1)
             for j in range(len(self.player.strategy.buyable)):
                 print(self.player.strategy.buyable[j], self.player.strategy.buy_at_turn[i, j], end='   ')
+                card_list[j] += self.player.strategy.buy_at_turn[i, j]
             print('')
-
+        print(card_list / 1_000_000)
 
 class CustomTournament:
     def __init__(self):

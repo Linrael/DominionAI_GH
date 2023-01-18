@@ -219,7 +219,7 @@ class MCRL:  # Monte Carlo Reinforcement Learning
         # print('!', end='')
 
     def set_buy_prio(self, player, turn):
-        self.last_s = current_state_rem_draws(player, turn)
+        self.last_s = current_state_avg_val(player, turn)
         q_val = self.q[self.last_s]  # array with values for each card in buyable
         if 0.1 < random.random():
             keys = [(q, random.random()) for q in q_val]  # If q values are same, choose one randomly.
@@ -231,7 +231,7 @@ class MCRL:  # Monte Carlo Reinforcement Learning
             self.prio_buys = pb
 
     def set_best_buy_prio(self, player, turn):
-        self.last_s = current_state_rem_draws(player, turn)
+        self.last_s = current_state_avg_val(player, turn)
         q_val = self.q[self.last_s]  # array with values for each card in buyable
         keys = [(q, random.random()) for q in q_val]  # If q values are same, choose one randomly.
         # Important since we initialize new states with same q values

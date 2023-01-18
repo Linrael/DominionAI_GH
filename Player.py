@@ -79,12 +79,12 @@ class Player:
                 break
 
     def custom_buy(self, turn):
-        # if turn > 15:
-        #     prio_buys = [Province, Duchy, Estate, NoCard]
-        # elif turn > 13:
-        #     prio_buys = [Province, Duchy, Silver, NoCard]
-        # elif turn > 10:
-        #     prio_buys = [Province, Gold, Duchy, Silver, NoCard]
+        if turn > 15:
+            prio_buys = [Province, Duchy, Estate, NoCard]
+        elif turn > 12:
+            prio_buys = [Province, Duchy, Silver, NoCard]
+        elif turn > 5:
+            prio_buys = [Province, Gold, Silver, NoCard]
         # else:
             # val = 0
             # all_cards = len(self.deck) + len(self.hand) + len(self.discardP)
@@ -102,7 +102,8 @@ class Player:
             #         prio_buys = [Gold, Lab, Silver, NoCard]
             # else:
             #     prio_buys = [Gold, Lab, Smithy, Silver, NoCard]
-        prio_buys = [Province, Gold, Silver]
+        else:
+            prio_buys = [Province, Gold, Smithy, Silver]
         self.play_actions()
         coins = self.calc_coins()
         for card in prio_buys:
