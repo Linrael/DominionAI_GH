@@ -23,9 +23,9 @@ def cross(weights1, weights2):
     return new_weights
 
 
-def mutate(weights, eps, rdm_strat):
+def mutate(weights, prob, rdm_strat):
     for i in range(len(weights)):
-        if random.random() < eps:
+        if random.random() < prob:
             weights[i] = rdm_strat[i]
 
 
@@ -168,25 +168,32 @@ def current_state_avg_val(player, turn):
 
 
 def current_state_rem_draws(player, turn):
-    # val = 0
-    # all_cards = len(player.deck) + len(player.hand) + len(player.discardP)
-    # for card in player.deck:
-    #     val += card.coins
-    # for card in player.hand:
-    #     val += card.coins
-    # for card in player.discardP:
-    #     val += card.coins
-    # avg_val = round(5 * (val / all_cards)) / 5
+    val = 0
+    smithies = 0
+    all_cards = len(player.deck) + len(player.hand) + len(player.discardP)
+    for card in player.deck:
+        val += card.coins
+        if card == Smithy:
+            smithies += 1
+    for card in player.hand:
+        val += card.coins
+        if card == Smithy:
+            smithies +=1
+    for card in player.discardP:
+        val += card.coins
+        if card == Smithy:
+            smithies +=1
+    avg_val = round(10 * (val / all_cards)) / 10
 
     len_deck = len(player.deck)
     drawable_cards_after_next_shuffle = (6 * (19 - turn) - len_deck)  # on average draw around 6 cards per turn
     deck_after_next_shuffle = (len_deck * 7 / 6 + len(player.hand) + len(player.discardP))  # on avg. buy 1 card per turn
     if drawable_cards_after_next_shuffle <= 0:
-        return 0#, avg_val
+        return 0, avg_val, smithies
     elif drawable_cards_after_next_shuffle / deck_after_next_shuffle >= 3.25:
-        return 3.5#, avg_val
+        return round(drawable_cards_after_next_shuffle / deck_after_next_shuffle), avg_val, smithies
     else:
-        return round(2 * drawable_cards_after_next_shuffle / deck_after_next_shuffle) / 2#, avg_val
+        return round(2 * drawable_cards_after_next_shuffle / deck_after_next_shuffle) / 2, avg_val, smithies
 
 
 class MCRL:  # Monte Carlo Reinforcement Learning
@@ -219,7 +226,7 @@ class MCRL:  # Monte Carlo Reinforcement Learning
         # print('!', end='')
 
     def set_buy_prio(self, player, turn):
-        self.last_s = current_state_avg_val(player, turn)
+        self.last_s = current_state_turn(player, turn)
         q_val = self.q[self.last_s]  # array with values for each card in buyable
         if 0.1 < random.random():
             keys = [(q, random.random()) for q in q_val]  # If q values are same, choose one randomly.
@@ -231,7 +238,7 @@ class MCRL:  # Monte Carlo Reinforcement Learning
             self.prio_buys = pb
 
     def set_best_buy_prio(self, player, turn):
-        self.last_s = current_state_avg_val(player, turn)
+        self.last_s = current_state_turn(player, turn)
         q_val = self.q[self.last_s]  # array with values for each card in buyable
         keys = [(q, random.random()) for q in q_val]  # If q values are same, choose one randomly.
         # Important since we initialize new states with same q values
