@@ -58,11 +58,6 @@ class Player:
                     break
             else:
                 break
-        # for card in self.hand:
-        #     if card.is_action and card.plus_actions > 0:  # 1st play all +action cards, since it can never hurt
-        #         card.play(self)
-        #     if card.is_action and card.plus_actions == 0 and self.actions > 0:
-        #         card.play(self)
 
     def calc_coins(self):
         coins = 0
@@ -111,7 +106,6 @@ class Player:
                 self.buy_card(card)
                 self.strategy.count_buys(card, turn)
                 break
-
 
     def calc_vp(self):
         vp = 0

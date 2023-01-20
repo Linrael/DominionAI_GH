@@ -3,19 +3,6 @@ import numpy as np
 from collections import defaultdict
 from Cards import *
 
-# class Strategy:
-#     def __init__(self):
-#         self.buyable = All_Cards + [NoCard]
-#         self.buy_counts = {}
-#
-#     def shuffle_buys(self):
-#         shuffled_buys = list(self.buyable)
-#         random.shuffle(shuffled_buys)
-#         return shuffled_buys
-#
-#     def buy_accepted(self, card):
-#         self.buy_counts[card] += 1
-
 
 def cross(weights1, weights2):
     eps = random.random()
@@ -30,8 +17,6 @@ def mutate(weights, prob, rdm_strat):
 
 
 # slightly adjust weights towards other weights; on average this reduces extreme weights towards center
-
-
 def perturb(weights, rate, rdm_strat):
     for i in range(len(weights)):
         weights[i] = weights[i] + rate * (rdm_strat[i] - weights[i])
@@ -122,14 +107,6 @@ class LinearGA(SimpleGA):
         for turn in range(max_rounds):
             self.prio_buys.append(sorted(self.buyable, key=get_weight))
 
-
-# s1 = LinearGA()
-# s2 = LinearGA()
-#
-# print(s2.weights)
-#
-# ns = evolve([s1, s2], frac=2)
-# print(ns[1].weights)
 
 def current_state_turn(player, turn):
     return turn

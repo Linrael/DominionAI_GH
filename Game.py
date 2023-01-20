@@ -1,6 +1,5 @@
 from Player import *
 from tqdm import tqdm
-
 import pickle
 
 
@@ -152,3 +151,57 @@ class CustomTournament:
             for j in range(len(self.player.strategy.buyable)):
                 print(self.player.strategy.buyable[j], self.player.strategy.buy_at_turn[i, j], end='   ')
             print('')
+
+
+'''
+    # One GA training can look like this:
+
+t = GATournament(StaticGA, all_strats=100)
+t.run_tournament(3_000,15,1_000_000)
+
+pickle_safe(t.all_strategies[0].weights, 'Static_100strats_3kep_15gps')
+
+    # To get the buy menu of the best performing strategy use:
+print(t.all_strategies[0].prio_buys)
+
+    # To get the 1st and last 3 buys of the top x strategies averaged over avg games use:
+t.print_buy_history(x, avg)
+
+    # To load some saved data use:
+ws = pickle_load('Lin_100strats_10kep_15gps_PLUS_10kep_20gps_ag')
+t1 = GATournament(LinearGA, all_strats=100, weights=ws)
+t1.vp_one_strat(1_000_000)
+print(t5.all_strategies[0].prio_buys)
+
+##############
+
+    # One RL training can look like this:
+    # IMPORTANT: Change in Strats.py in set_buy_prio and set_best_buy_prio current_state_... to the state function you want to use
+t2 = MCRLTournament()
+t2.run_tournament(10_000, 10_000, 1_000_000)  # Here we run 10k * 10k games. The 2 numbers have no meaning, just the product matters.
+# I kept it that way to have a more useful progress bar
+
+pickle_safe(dict(t2.player.strategy.q), 'q_turn_10kx10k')
+pickle_safe(dict(t2.player.strategy.c), 'c_turn_10kx10k')
+
+    # Print with:
+t2.print_buy_history()
+
+    # Look at Q-values (= see average vp for each state)
+print(t2.player.strategy.q)
+
+    # To load:
+loadedq = pickle_load('q_turn_10kx10k')
+loadedc = pickle_load('c_turn_10kx10k')
+
+t3 = MCRLTournament(loadedq, loadedc)
+t3.last_episode(1_000_000)
+t3.print_buy_history()
+
+############
+
+    # To run some buy menu u put in manually use:
+tc = CustomTournament()
+tc.last_episode(1_000_000)
+tc.print_buy_history()
+'''
